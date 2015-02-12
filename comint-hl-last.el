@@ -2,7 +2,7 @@
 
 ;; Copyright 2015 Jan Rehders
 ;; 
-;; Author: Jan Rehders <cmdkeen@gmx.de>
+;; Author: Jan Rehders <jan@sheijk.net>
 ;; Version: 0.1
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -27,10 +27,12 @@
 ;; comint-hl-last-mode or global-comint-hl-last-mode and highlighting will
 ;; appear in shells, gud, etc.
 
-(defvar comint-hl-last-highlight nil "Helper to remove highlight of last output")
-(make-variable-buffer-local 'comint-hl-last-highlight)
+;;; Code:
 
 (require 'fringe-helper)
+
+(defvar comint-hl-last-highlight nil "Helper to remove highlight of last output.")
+(make-variable-buffer-local 'comint-hl-last-highlight)
 
 (fringe-helper-define 'comint-hl-last-marker '(center t)
   "XX......"
@@ -55,14 +57,22 @@
     (fringe-helper-remove comint-hl-last-highlight)))
 
 (defun comint-hl-last-update (arg)
-  "Updates the highlighting. Will be added to `comint-output-filter-functions'
-when mode is active."
+  "Update the highlighting.
+
+Will be added to `comint-output-filter-functions' when mode is active.
+ARG is ignored."
   (comint-hl-last-remove)
   (setq comint-hl-last-highlight
-        (fringe-helper-insert-region comint-last-input-start (point-max) 'comint-hl-last-marker 'left-fringe 'comint-hl-last-marker-face)))
+        (fringe-helper-insert-region comint-last-input-start
+                                     (point-max)
+                                     'comint-hl-last-marker
+                                     'left-fringe
+                                     'comint-hl-last-marker-face)))
 
 (defun comint-hl-last-toggle (global)
-  "Toggles either global-comint-hl-last-mode or comint-hl-last-mode."
+  "Toggle either global-comint-hl-last-mode or comint-hl-last-mode.
+
+GLOBAL decides between global and local mode."
   (if (if global global-comint-hl-last-mode comint-hl-last-mode)
       (progn
         (add-hook 'comint-output-filter-functions 'comint-hl-last-update t (not global))
@@ -95,3 +105,5 @@ when mode is active."
 
   (comint-hl-last-toggle t))
 
+(provide 'comint-hl-last)
+;;; comint-hl-last ends here
