@@ -33,6 +33,11 @@
 ;;
 ;;; Changelog
 ;;
+;; v0.3, 2015-02-22
+;; - Mini bug fix when mode was started in empty comint buffers.
+;; - Updated package meta data.
+;; - Added screen shots to readme.
+;;
 ;; v0.2, 2015-02-12
 ;; - Mode can only be enabled in major modes derived from comint-mode.
 ;; - Toggling global mode will add/remove display in all buffers.
