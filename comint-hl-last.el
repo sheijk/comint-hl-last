@@ -3,7 +3,11 @@
 ;; Copyright 2015 Jan Rehders
 ;; 
 ;; Author: Jan Rehders <jan@sheijk.net>
-;; Version: 0.2
+;; URL: https://github.com/sheijk/comint-hl-last
+;; Version: 0.3
+;; Created: 2015-02-11
+;;
+;; This file is NOT part of GNU Emacs.
 ;;
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -83,16 +87,17 @@
 Will be added to `comint-output-filter-functions' when mode is active.
 ARG is ignored."
   (comint-hl-last-remove)
-  (setq comint-hl-last-highlight
-        (fringe-helper-insert-region (save-excursion
-                                       (goto-char comint-last-input-start)
-                                       (next-line)
-                                       (beginning-of-line 1)
-                                       (point))
-                                     (point-max)
-                                     'comint-hl-last-marker
-                                     'left-fringe
-                                     'comint-hl-last-marker-face))
+  (when comint-last-input-start
+    (setq comint-hl-last-highlight
+          (fringe-helper-insert-region (save-excursion
+                                         (goto-char comint-last-input-start)
+                                         (next-line)
+                                         (beginning-of-line 1)
+                                         (point))
+                                       (point-max)
+                                       'comint-hl-last-marker
+                                       'left-fringe
+                                       'comint-hl-last-marker-face)))
   nil)
 
 (defun comint-hl-last-toggle (global)
