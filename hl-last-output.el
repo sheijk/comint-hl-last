@@ -1,9 +1,9 @@
-;;; comint-hl-last.el --- Highlight output of last command in fringe
+;;; hl-last-output.el --- Highlight output of last command in fringe
 ;;
 ;; Copyright 2015 Jan Rehders
 ;; 
 ;; Author: Jan Rehders <jan@sheijk.net>
-;; URL: https://github.com/sheijk/comint-hl-last
+;; URL: https://github.com/sheijk/hl-last-output
 ;; Version: 0.3
 ;; Created: 2015-02-11
 ;;
@@ -28,7 +28,7 @@
 ;;
 ;; This defines a minor mode which will highlight the output of the last command
 ;; by a line in the fringe. It works with all comint derived modes. Call
-;; comint-hl-last-mode or global-comint-hl-last-mode and highlighting will
+;; hl-last-output-mode or global-hl-last-output-mode and highlighting will
 ;; appear in shells, gud, etc.
 ;;
 ;;; Changelog
@@ -53,38 +53,38 @@
 ;;
 ;; - Global mode
 ;;   - M-x, shell, pwd, ls, M-x, rename-buffer, *shell2*, M-x, shell, ls, pwd,
-;;     M-x, global-comint-hl-last-mode, check highlighting is in both shells
-;;   - M-x, global-comint-hl-last-mode, check if highlighting gets removed in
+;;     M-x, global-hl-last-output-mode, check highlighting is in both shells
+;;   - M-x, global-hl-last-output-mode, check if highlighting gets removed in
 ;;     both shells.
 ;;
 ;;; Code:
 
 (require 'fringe-helper)
 
-(defvar comint-hl-last-highlight nil "Helper to remove highlight of last output.")
-(make-variable-buffer-local 'comint-hl-last-highlight)
+(defvar hl-last-output-highlight nil "Helper to remove highlight of last output.")
+(make-variable-buffer-local 'hl-last-output-highlight)
 
-(fringe-helper-define 'comint-hl-last-marker '(center t)
+(fringe-helper-define 'hl-last-output-marker '(center t)
   "XX......"
   "XX......"
   "XX......"
   "XX......")
 
-(defgroup comint-hl-last
+(defgroup hl-last-output
   nil
-  "Customization group for comint-hl-last."
+  "Customization group for hl-last-output."
   :group 'comint)
 
-(defface comint-hl-last-marker-face
+(defface hl-last-output-marker-face
   '((t (:inherit comint-highlight-prompt)))
   "Face used to highlight the fringe on folded regions"
-  :group 'comint-hl-last)
+  :group 'hl-last-output)
 
-(defun comint-hl-last-remove ()
+(defun hl-last-output-remove ()
   "Remove marker from fringe."
   (interactive)
-  (when comint-hl-last-highlight
-    (fringe-helper-remove comint-hl-last-highlight)))
+  (when hl-last-output-highlight
+    (fringe-helper-remove hl-last-output-highlight)))
 
 (defmacro comint-hl-by-shell (postfix)
   "Used to choose between similarly named symbols for comint and eshell.
@@ -108,79 +108,79 @@ the returned symbol will also be quoted."
     (invalid
      (error "invalid form passed to comint-hl-by-shell: %s" invalid))))
 
-(defun comint-hl-last-update (&optional _)
+(defun hl-last-output-update (&optional _)
   "Update the highlighting.
 
 Will be added to `comint-output-filter-functions' when mode is active.
 `_' is ignored."
-  (comint-hl-last-remove)
+  (hl-last-output-remove)
   (when (comint-hl-by-shell last-input-start)
-    (setq comint-hl-last-highlight
+    (setq hl-last-output-highlight
           (fringe-helper-insert-region (save-excursion
                                          (goto-char (comint-hl-by-shell last-input-start))
                                          (next-line)
                                          (beginning-of-line 1)
                                          (point))
                                        (point-max)
-                                       'comint-hl-last-marker
+                                       'hl-last-output-marker
                                        'left-fringe
-                                       'comint-hl-last-marker-face)))
+                                       'hl-last-output-marker-face)))
   nil)
 
-(defun comint-hl-last-toggle (global)
-  "Toggle either global-comint-hl-last-mode or comint-hl-last-mode.
+(defun hl-last-output-toggle (global)
+  "Toggle either global-hl-last-output-mode or hl-last-output-mode.
 
 GLOBAL decides between global and local mode."
-  (let ((turned-on (if global global-comint-hl-last-mode comint-hl-last-mode)))
+  (let ((turned-on (if global global-hl-last-output-mode hl-last-output-mode)))
     (cond
      ((and global turned-on)
-      (add-hook (comint-hl-by-shell 'output-filter-functions) 'comint-hl-last-update t nil)
+      (add-hook (comint-hl-by-shell 'output-filter-functions) 'hl-last-output-update t nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
           (when (or (derived-mode-p 'comint-mode)
                     (derived-mode-p 'eshell-mode))
-            (comint-hl-last-update "")))))
+            (hl-last-output-update "")))))
 
      ((and global (not turned-on))
-      (remove-hook (comint-hl-by-shell 'output-filter-functions) 'comint-hl-last-update nil)
+      (remove-hook (comint-hl-by-shell 'output-filter-functions) 'hl-last-output-update nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
           (when (or (derived-mode-p 'comint-mode)
                     (derived-mode-p 'eshell-mode))
-            (comint-hl-last-remove)))))
+            (hl-last-output-remove)))))
 
      ((and (not global) turned-on)
-      (add-hook (comint-hl-by-shell 'output-filter-functions) 'comint-hl-last-update t t)
-      (comint-hl-last-update ""))
+      (add-hook (comint-hl-by-shell 'output-filter-functions) 'hl-last-output-update t t)
+      (hl-last-output-update ""))
 
      ((and (not global) (not turned-on))
-      (comint-hl-last-remove)
+      (hl-last-output-remove)
       (remove-hook (comint-hl-by-shell 'comint-output-filter-functions)
-                   'comint-hl-last-update
+                   'hl-last-output-update
                    (not global))))))
 
 ;;;###autoload
-(define-minor-mode comint-hl-last-mode
+(define-minor-mode hl-last-output-mode
   "Minor mode to highlight the output of the last command in the fringe."
   :init-value nil
   :require 'comint
-  :group 'comint-hl-last
+  :group 'hl-last-output
   :lighter " hll"
   :version "0.1"
 
-  (comint-hl-last-toggle nil))
+  (hl-last-output-toggle nil))
 
 ;;;###autoload
-(define-minor-mode global-comint-hl-last-mode
+(define-minor-mode global-hl-last-output-mode
   "Minor mode to highlight the output of the last command in the fringe."
   :init-value nil
   :require 'comint
-  :group 'comint-hl-last
+  :group 'hl-last-output
   :global t
   :lighter " hll"
   :version "0.1"
 
-  (comint-hl-last-toggle t))
+  (hl-last-output-toggle t))
 
-(provide 'comint-hl-last)
-;;; comint-hl-last ends here
+(provide 'hl-last-output)
+;;; hl-last-output ends here
