@@ -1,6 +1,7 @@
-# comint-hl-last
+# hl-last-output
 
-A minor mode to highlight the output of the last command in Emacs shell buffers.
+A minor mode to highlight the output of the last command in Emacs shell
+buffers. Supports both comint derived modes and eshell.
 
 The colored bar on the left side indicates the output of the last command run in
 the comint buffer.

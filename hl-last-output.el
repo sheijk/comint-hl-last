@@ -1,10 +1,10 @@
 ;;; hl-last-output.el --- Highlight output of last command in fringe
 ;;
-;; Copyright 2015 Jan Rehders
+;; Copyright 2015-2018 Jan Rehders
 ;; 
 ;; Author: Jan Rehders <jan@sheijk.net>
 ;; URL: https://github.com/sheijk/hl-last-output
-;; Version: 0.3
+;; Version: 0.4
 ;; Created: 2015-02-11
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -32,6 +32,10 @@
 ;; appear in shells, gud, etc.
 ;;
 ;;; Changelog
+;;
+;; v0.4, 2018-09-21
+;; - Support eshell as well as comint based modes
+;; - Renamed to hl-last-output
 ;;
 ;; v0.3, 2015-02-22
 ;; - Mini bug fix when mode was started in empty comint buffers.
