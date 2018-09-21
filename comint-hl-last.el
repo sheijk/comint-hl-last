@@ -86,16 +86,38 @@
   (when comint-hl-last-highlight
     (fringe-helper-remove comint-hl-last-highlight)))
 
-(defun comint-hl-last-update (arg)
+(defmacro comint-hl-by-shell (postfix)
+  "Used to choose between similarly named symbols for comint and eshell.
+
+Will expand into code which will select either eshell-postfix or
+comint-postfix depending on which of the shells we're running in.
+
+`postfix' can be a symbol or a quoted symbol. If it its quoted
+the returned symbol will also be quoted."
+  (pcase postfix
+    (`(quote ,symbol)
+     `(if (derived-mode-p 'comint-mode)
+          ',(symbol-append 'comint- (symbol-name symbol))
+        ',(symbol-append 'eshell- (symbol-name symbol))))
+
+    ((guard (atom postfix))
+     `(if (derived-mode-p 'comint-mode)
+          ,(symbol-append 'comint- (symbol-name postfix))
+        ,(symbol-append 'eshell- (symbol-name postfix))))
+
+    (invalid
+     (error "invalid form passed to comint-hl-by-shell: %s" invalid))))
+
+(defun comint-hl-last-update (&optional _)
   "Update the highlighting.
 
 Will be added to `comint-output-filter-functions' when mode is active.
-ARG is ignored."
+`_' is ignored."
   (comint-hl-last-remove)
-  (when comint-last-input-start
+  (when (comint-hl-by-shell last-input-start)
     (setq comint-hl-last-highlight
           (fringe-helper-insert-region (save-excursion
-                                         (goto-char comint-last-input-start)
+                                         (goto-char (comint-hl-by-shell last-input-start))
                                          (next-line)
                                          (beginning-of-line 1)
                                          (point))
@@ -112,26 +134,30 @@ GLOBAL decides between global and local mode."
   (let ((turned-on (if global global-comint-hl-last-mode comint-hl-last-mode)))
     (cond
      ((and global turned-on)
-      (add-hook 'comint-output-filter-functions 'comint-hl-last-update t nil)
+      (add-hook (comint-hl-by-shell 'output-filter-functions) 'comint-hl-last-update t nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
-          (when (derived-mode-p 'comint-mode)
+          (when (or (derived-mode-p 'comint-mode)
+                    (derived-mode-p 'eshell-mode))
             (comint-hl-last-update "")))))
 
      ((and global (not turned-on))
-      (remove-hook 'comint-output-filter-functions 'comint-hl-last-update nil)
+      (remove-hook (comint-hl-by-shell 'output-filter-functions) 'comint-hl-last-update nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
-          (when (derived-mode-p 'comint-mode)
+          (when (or (derived-mode-p 'comint-mode)
+                    (derived-mode-p 'eshell-mode))
             (comint-hl-last-remove)))))
 
      ((and (not global) turned-on)
-      (add-hook 'comint-output-filter-functions 'comint-hl-last-update t t)
+      (add-hook (comint-hl-by-shell 'output-filter-functions) 'comint-hl-last-update t t)
       (comint-hl-last-update ""))
 
      ((and (not global) (not turned-on))
       (comint-hl-last-remove)
-      (remove-hook 'comint-output-filter-functions 'comint-hl-last-update (not global))))))
+      (remove-hook (comint-hl-by-shell 'comint-output-filter-functions)
+                   'comint-hl-last-update
+                   (not global))))))
 
 ;;;###autoload
 (define-minor-mode comint-hl-last-mode
