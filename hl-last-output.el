@@ -1,11 +1,12 @@
-;;; hl-last-output.el --- Highlight output of last command in fringe
+;;; hl-last-output.el --- Highlight output of last command in fringe -*- lexical-binding: t -*-
 ;;
-;; Copyright 2015-2018 Jan Rehders
+;; Copyright 2015 Jan Rehders
 ;; 
 ;; Author: Jan Rehders <jan@sheijk.net>
 ;; URL: https://github.com/sheijk/hl-last-output
 ;; Version: 0.4
 ;; Created: 2015-02-11
+;; Package-Requires: ((emacs "24") (fringe-helper "1.0"))
 ;;
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -27,11 +28,11 @@
 ;;; Commentary:
 ;;
 ;; This defines a minor mode which will highlight the output of the last command
-;; by a line in the fringe. It works with all comint derived modes. Call
+;; by a line in the fringe.  It works with all comint derived modes.  Call
 ;; hl-last-output-mode or global-hl-last-output-mode and highlighting will
 ;; appear in shells, gud, etc.
 ;;
-;;; Changelog
+;;; Changelog:
 ;;
 ;; v0.4, 2018-09-21
 ;; - Support eshell as well as comint based modes
@@ -47,7 +48,7 @@
 ;; - Toggling global mode will add/remove display in all buffers.
 ;; - Do not highlight last input line.
 ;;
-;;; Tests
+;;; Tests:
 ;;
 ;; For now only be hand. Check the following:
 ;; - Basic functionality
@@ -90,13 +91,13 @@
   (when hl-last-output-highlight
     (fringe-helper-remove hl-last-output-highlight)))
 
-(defmacro comint-hl-by-shell (postfix)
+(defmacro hl-last-output-by-shell (postfix)
   "Used to choose between similarly named symbols for comint and eshell.
 
 Will expand into code which will select either eshell-postfix or
 comint-postfix depending on which of the shells we're running in.
 
-`postfix' can be a symbol or a quoted symbol. If it its quoted
+`POSTFIX' can be a symbol or a quoted symbol.  If it its quoted
 the returned symbol will also be quoted."
   (pcase postfix
     (`(quote ,symbol)
@@ -110,18 +111,17 @@ the returned symbol will also be quoted."
         ,(symbol-append 'eshell- (symbol-name postfix))))
 
     (invalid
-     (error "invalid form passed to comint-hl-by-shell: %s" invalid))))
+     (error "Invalid form passed to hl-last-output-by-shell: %s" invalid))))
 
 (defun hl-last-output-update (&optional _)
   "Update the highlighting.
 
-Will be added to `comint-output-filter-functions' when mode is active.
-`_' is ignored."
+Will be added to `comint-output-filter-functions' when mode is active."
   (hl-last-output-remove)
-  (when (comint-hl-by-shell last-input-start)
+  (when (hl-last-output-by-shell last-input-start)
     (setq hl-last-output-highlight
           (fringe-helper-insert-region (save-excursion
-                                         (goto-char (comint-hl-by-shell last-input-start))
+                                         (goto-char (hl-last-output-by-shell last-input-start))
                                          (next-line)
                                          (beginning-of-line 1)
                                          (point))
@@ -132,13 +132,13 @@ Will be added to `comint-output-filter-functions' when mode is active.
   nil)
 
 (defun hl-last-output-toggle (global)
-  "Toggle either global-hl-last-output-mode or hl-last-output-mode.
+  "Toggle either global or normal mode.
 
 GLOBAL decides between global and local mode."
   (let ((turned-on (if global global-hl-last-output-mode hl-last-output-mode)))
     (cond
      ((and global turned-on)
-      (add-hook (comint-hl-by-shell 'output-filter-functions) 'hl-last-output-update t nil)
+      (add-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update t nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
           (when (or (derived-mode-p 'comint-mode)
@@ -146,7 +146,7 @@ GLOBAL decides between global and local mode."
             (hl-last-output-update "")))))
 
      ((and global (not turned-on))
-      (remove-hook (comint-hl-by-shell 'output-filter-functions) 'hl-last-output-update nil)
+      (remove-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
           (when (or (derived-mode-p 'comint-mode)
@@ -154,13 +154,13 @@ GLOBAL decides between global and local mode."
             (hl-last-output-remove)))))
 
      ((and (not global) turned-on)
-      (add-hook (comint-hl-by-shell 'output-filter-functions) 'hl-last-output-update t t)
+      (add-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update t t)
       (hl-last-output-update ""))
 
      ((and (not global) (not turned-on))
       (hl-last-output-remove)
-      (remove-hook (comint-hl-by-shell 'comint-output-filter-functions)
-                   'hl-last-output-update
+      (remove-hook (hl-last-output-by-shell 'comint-output-filter-functions)
+                   #'hl-last-output-update
                    (not global))))))
 
 ;;;###autoload
@@ -170,7 +170,6 @@ GLOBAL decides between global and local mode."
   :require 'comint
   :group 'hl-last-output
   :lighter " hll"
-  :version "0.1"
 
   (hl-last-output-toggle nil))
 
@@ -182,9 +181,8 @@ GLOBAL decides between global and local mode."
   :group 'hl-last-output
   :global t
   :lighter " hll"
-  :version "0.1"
 
   (hl-last-output-toggle t))
 
 (provide 'hl-last-output)
-;;; hl-last-output ends here
+;;; hl-last-output.el ends here
