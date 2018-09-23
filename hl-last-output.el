@@ -1,6 +1,6 @@
 ;;; hl-last-output.el --- Highlight output of last command in fringe -*- lexical-binding: t -*-
 ;;
-;; Copyright 2015 Jan Rehders
+;; Copyright 2015-2018 Jan Rehders
 ;; 
 ;; Author: Jan Rehders <jan@sheijk.net>
 ;; URL: https://github.com/sheijk/hl-last-output
@@ -138,20 +138,20 @@ GLOBAL decides between global and local mode."
   (let ((turned-on (if global global-hl-last-output-mode hl-last-output-mode)))
     (cond
      ((and global turned-on)
-      (add-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update t nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
           (when (or (derived-mode-p 'comint-mode)
                     (derived-mode-p 'eshell-mode))
-            (hl-last-output-update "")))))
+            (hl-last-output-update "")
+            (add-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update t t)))))
 
      ((and global (not turned-on))
-      (remove-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update nil)
       (dolist (buffer (buffer-list))
         (with-current-buffer buffer
           (when (or (derived-mode-p 'comint-mode)
                     (derived-mode-p 'eshell-mode))
-            (hl-last-output-remove)))))
+            (hl-last-output-remove)
+            (remove-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update t)))))
 
      ((and (not global) turned-on)
       (add-hook (hl-last-output-by-shell 'output-filter-functions) #'hl-last-output-update t t)
@@ -159,9 +159,8 @@ GLOBAL decides between global and local mode."
 
      ((and (not global) (not turned-on))
       (hl-last-output-remove)
-      (remove-hook (hl-last-output-by-shell 'comint-output-filter-functions)
-                   #'hl-last-output-update
-                   (not global))))))
+      (remove-hook (hl-last-output-by-shell 'output-filter-functions)
+                   #'hl-last-output-update t)))))
 
 ;;;###autoload
 (define-minor-mode hl-last-output-mode
